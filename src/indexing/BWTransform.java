@@ -1,6 +1,7 @@
 package indexing;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class BWTransform {
@@ -38,14 +39,24 @@ public class BWTransform {
 	// fun: extract the BWT
 	// input: array containing rotations
 	// return: String (the BWT)
-	public static String extractLastChar(String[] rotations){
+	public static String extractLastColumn(String[] rotations){
 		
 		String BWT = "";
 		for(int i=0; i<rotations.length; i++){
 			BWT = BWT + rotations[i].charAt(rotations[i].length()-1);
 		}
-		System.out.println(BWT);
 		return BWT;
+	}
+	
+	// fun: extract the First Column
+	// input: array containing rotations
+	// return: String (the First Column)
+	public static String extractFirstColumn(String[] rotations){
+		String First = "";
+		for(int i=0; i<rotations.length; i++){
+			First = First + rotations[i].charAt(0);
+		}
+		return First;
 	}
 	
 	// fun: based on the BWT, revert back to the original string
@@ -77,14 +88,34 @@ public class BWTransform {
 	// just some testing
 	public static void main(String[] args){
 		
-		String test = "banana";
+		String test = "mississippi";
 		String[] testRot = genRotations(test);
 		sortRotations(testRot);
-		String testBWT = extractLastChar(testRot);
-		
+		String testBWT = extractLastColumn(testRot);
+		String testFirst = extractFirstColumn(testRot);
+		System.out.println();
+		System.out.println("BWT is");
 		System.out.println(testBWT);
-		
+		System.out.println();
+		System.out.println("FIRST is");
+		System.out.println(testFirst);
+		System.out.println();
 		revertOriginal(testBWT);
+		
+		@SuppressWarnings("unused")
+		ArrayList<CharOccurrence> countTable = new ArrayList<CharOccurrence>();
+		countTable = BackwardSearching.prodOccTable(testFirst);
+		
+		System.out.println();
+		System.out.println("Testing BS");
+		
+		ArrayList<Integer> testsarange = new ArrayList<Integer>();
+		testsarange = BackwardSearching.saRangeOfQuery("iss", countTable, testBWT, testFirst);
+		
+		System.out.println();
+		for(int i=0;i<testsarange.size();i++){
+			System.out.println(testsarange.get(i));
+		}
 		
 	}
 }
