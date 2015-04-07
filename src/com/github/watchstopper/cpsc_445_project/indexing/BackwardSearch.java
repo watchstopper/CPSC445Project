@@ -35,10 +35,10 @@ public class BackwardSearch {
 		return rank;
 	}
 
-	// FUNCTION: Return range of suffices in the text for which
-	//           the query is a prefix.
+	// FUNCTION: Return range of suffices, in the specified range of the
+	//           text, for which the query is a prefix.
 	// INPUT: String (query), ArrayList<CharOccurrence> (count table),
-	//        String (BWT)
+	//        String (BWT), int (start index), end (end index)
 	// RETURN: Array of ints (index range start and end)
 	public static ArrayList<Integer> getSARange(String query,
 			ArrayList<CharOccurrence> table, String bwt, int start, int end) {
@@ -56,9 +56,10 @@ public class BackwardSearch {
 		return saRange;
 	}
 
-	// FUNCTION: Check if a given query exists in the text.
+	// FUNCTION: Check if a given query exists in the specified range
+	//           of the text.
 	// INPUT: String (query), ArrayList<CharOccurrence> (count table),
-	//        String (BWT)
+	//        String (BWT), int (start index), end (end index)
 	// RETURN: true if query exists in the text, false otherwise
 	public static boolean containsQuery(String query,
 			ArrayList<CharOccurrence> table, String bwt, int start, int end) {
