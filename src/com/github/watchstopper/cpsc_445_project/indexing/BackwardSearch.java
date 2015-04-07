@@ -1,3 +1,4 @@
+package com.github.watchstopper.cpsc_445_project.indexing;
 import java.util.ArrayList;
 
 public class BackwardSearch {
@@ -7,7 +8,7 @@ public class BackwardSearch {
 	public static ArrayList<CharOccurrence> produceCharOccurrenceTable(String s) {
 		ArrayList<CharOccurrence> countTable = new ArrayList<CharOccurrence>();
 
-		for (int i = 0; i < s.length() - 1; i++) {
+		for (int i = 0; i < s.length(); i++) {
 			if (CharOccurrence.containsChar(countTable, s.charAt(i)) == false) {
 				CharOccurrence co = new CharOccurrence(s.charAt(i), i);
 				countTable.add(co);
@@ -34,15 +35,13 @@ public class BackwardSearch {
 		return rank;
 	}
 
-	// FUNCTION: Return range of suffices for which the query is a prefix.
+	// FUNCTION: Return range of suffices in the text for which
+	//           the query is a prefix.
 	// INPUT: String (query), ArrayList<CharOccurrence> (count table),
 	//        String (BWT)
 	// RETURN: Array of ints (index range start and end)
 	public static ArrayList<Integer> getSARange(String query,
-			ArrayList<CharOccurrence> table, String bwt) {
-		int start = 1;
-		int end = bwt.length();
-
+			ArrayList<CharOccurrence> table, String bwt, int start, int end) {
 		for (int i = query.length() - 1; i >= 0; i--) {
 			start = CharOccurrence.getCount(table, query.charAt(i))
 					+ getRank(bwt, start - 1, query.charAt(i)) + 1;
@@ -50,11 +49,26 @@ public class BackwardSearch {
 					+ getRank(bwt, end, query.charAt(i));
 		}
 
-		// last step ==> add indexes to saRange
 		ArrayList<Integer> saRange = new ArrayList<Integer>();
 		saRange.add(start - 1);
 		saRange.add(end - 1);
 
 		return saRange;
+	}
+
+	// FUNCTION: Check if a given query exists in the text.
+	// INPUT: String (query), ArrayList<CharOccurrence> (count table),
+	//        String (BWT)
+	// RETURN: true if query exists in the text, false otherwise
+	public static boolean containsQuery(String query,
+			ArrayList<CharOccurrence> table, String bwt, int start, int end) {
+		ArrayList<Integer> saRange = new ArrayList<Integer>();
+		saRange = getSARange(query, table, bwt, start, end);
+
+		if (saRange.get(0) <= saRange.get(1)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

@@ -1,3 +1,4 @@
+package com.github.watchstopper.cpsc_445_project.indexing;
 import java.util.ArrayList;
 
 public class CharOccurrence {
@@ -31,18 +32,17 @@ public class CharOccurrence {
 	// INPUT: ArrayList<CharOccurrence> (count table), char
 	// RETURN: true if character is in the CharOccurrence table, false otherwise
 	public static boolean containsChar(ArrayList<CharOccurrence> table, char c) {
-		boolean containsChar = false;
 		int i = 0;
 
-		while (!containsChar && i < table.size()) {
+		while (i < table.size()) {
 			if (table.get(i).getChar() == c) {
-				containsChar = true;
+				return true;
 			}
 
 			i++;	
 		}
 
-		return containsChar;
+		return false;
 	}
 
 	// FUNCTION: Get count of lexicographically smaller characters

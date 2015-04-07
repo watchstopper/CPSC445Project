@@ -1,6 +1,12 @@
+package com.github.watchstopper.cpsc_445_project.dp;
 public class LPA {
-	private static String sequence1Alignment = "";
-	private static String sequence2Alignment = "";
+	private static int[][] matrixM;
+	private static int[][] matrixM_1;
+	private static int[][] matrixM_2;
+	private static int[][] matrixM_3;
+	private static String sequence1Alignment;
+	private static String sequence2Alignment;
+	private static int alignmentScore;
 
 	private static final int A = 1;
 	private static final int B = -3;
@@ -63,8 +69,9 @@ public class LPA {
 	}
 
 	private static void reconstructAlignment(char[] sequence1, char[] sequence2,
-			int[][] matrixM_1, int[][] matrixM_2, int[][] matrixM_3,
 			int maxScoreMatrix, int maxI, int maxJ) {
+		sequence1Alignment = "";
+		sequence2Alignment = "";
 		int i = maxI;
 		int j = maxJ;
 		int sequence1Index = maxI - 1;
@@ -89,9 +96,6 @@ public class LPA {
 				j--;
 				sequence2Index--;
 			} else {
-				sequence1Alignment = new StringBuilder(sequence1Alignment).reverse().toString();
-				sequence2Alignment = new StringBuilder(sequence2Alignment).reverse().toString();
-
 				return;
 			}
 
@@ -108,17 +112,15 @@ public class LPA {
 		}
 	}
 
-	public static int getMaxAlignmentScore(String sequence1, String sequence2) {
+	public static void runLPA(String sequence1, String sequence2) {
 		char[] sequence1arr = sequence1.toCharArray();
 		char[] sequence2arr = sequence2.toCharArray();
-
 		int d = sequence1.length() + 1;
 		int m = sequence2.length() + 1;
-
-		int[][] matrixM = new int[d][m];
-		int[][] matrixM_1 = new int[d][m];
-		int[][] matrixM_2 = new int[d][m];
-		int[][] matrixM_3 = new int[d][m];
+		matrixM = new int[d][m];
+		matrixM_1 = new int[d][m];
+		matrixM_2 = new int[d][m];
+		matrixM_3 = new int[d][m];
 
 		// Initialization
 		for (int j = 0; j < m; j++) {
@@ -175,11 +177,11 @@ public class LPA {
 		}
 
 		// Start traceback
-		reconstructAlignment(sequence1arr, sequence2arr, matrixM_1,
-				matrixM_2, matrixM_3, maxScoreMatrix, maxI, maxJ);
+		reconstructAlignment(sequence1arr, sequence2arr,
+				maxScoreMatrix, maxI, maxJ);
 
 		// Termination
-		return maxScore(matrixM, d, m);
+		alignmentScore = maxScore(matrixM, d, m);
 	}
 
 	public static String getSequence1Alignment() {
@@ -188,5 +190,9 @@ public class LPA {
 
 	public static String getSequence2Alignment() {
 		return sequence2Alignment;
+	}
+
+	public static int getAlignmentScore() {
+		return alignmentScore;
 	}
 }
