@@ -1,19 +1,64 @@
 package com.github.watchstopper.cpsc_445_project.dp;
-public class LPA {
-	private static int[][] matrixM;
-	private static int[][] matrixM_1;
-	private static int[][] matrixM_2;
-	private static int[][] matrixM_3;
-	private static String sequence1Alignment;
-	private static String sequence2Alignment;
-	private static int alignmentScore;
 
+import java.util.ArrayList;
+import java.util.Stack;
+
+import com.github.watchstopper.cpsc_445_project.indexing.BWT;
+import com.github.watchstopper.cpsc_445_project.indexing.BackwardSearch;
+import com.github.watchstopper.cpsc_445_project.indexing.CharOccurrence;
+import com.github.watchstopper.cpsc_445_project.parser.Parser;
+
+public class LPA {
+	private static String text;
+	private static char[] pattern;
+	private static String bwt;
+	private static ArrayList<CharOccurrence> countTable;
+
+	private static Stack<int[]> saRanges;
+	private static int n;
+	private static int m;
+	private static int depth;
+
+	private static int[][] matrixN;
+	private static int[][] matrixN_1;
+	private static int[][] matrixN_2;
+	private static int[][] matrixN_3;
+
+	private static String sequence1Alignment = "";
+	private static String sequence2Alignment = "";
+	private static int maxScore = 0;
+
+	private static final String TEXT_PATH = "sequences\\text.txt";
+	private static final String PATTERN_PATH = "sequences\\pattern.txt";
 	private static final int A = 1;
 	private static final int B = -3;
 	private static final int G = 5;
 	private static final int S = 2;
 	private static final int MIN_VALUE = -50000;
 
+	// FUNCTION: Initialize the DP tables.
+	// INPUT: N/A
+	// RETURN: N/A
+	private static void initializeMatrices() {
+		matrixN = new int[n][m];
+		matrixN_1 = new int[n][m];
+		matrixN_2 = new int[n][m];
+		matrixN_3 = new int[n][m];
+
+		for (int j = 0; j < m; j++) {
+			matrixN[0][j] = 0;
+			matrixN_2[0][j] = MIN_VALUE;
+		}
+
+		for (int i = 1; i < n; i++) {
+			matrixN_1[i][0] = -(G + i * S);
+			matrixN_3[i][0] = MIN_VALUE;
+		}
+	}
+
+	// FUNCTION: Determine if we have a matched or mismatched pair.
+	// INPUT: char, char
+	// RETURN: a if matched pair, b otherwise
 	private static int getDistance(char c1, char c2) {
 		if (c1 == c2) {
 			return A;
@@ -22,177 +67,271 @@ public class LPA {
 		}
 	}
 
-	private static int maxScore(int[][] matrix, int d, int m) {
+	// FUNCTION: Fill the current row of the DP tables.
+	// INPUT: char (the 'z' in zX^-1)
+	// RETURN: N/A
+	private static void fillRow(char c) {
+		for (int j = 1; j < m; j++) {
+			// Simplified recurrences
+			matrixN_1[depth][j] = Math.max(MIN_VALUE,
+					matrixN[depth - 1][j - 1] + getDistance(c, pattern[j - 1]));
+
+			matrixN_2[depth][j] = Math.max(MIN_VALUE,
+					Math.max(matrixN[depth - 1][j] - (G + S), matrixN_2[depth - 1][j] - S));
+
+			matrixN_3[depth][j] = Math.max(MIN_VALUE,
+					Math.max(matrixN[depth][j - 1] - (G + S), matrixN_3[depth][j - 1] - S));
+
+			matrixN[depth][j] = Math.max(matrixN_1[depth][j],
+					Math.max(matrixN_2[depth][j], matrixN_3[depth][j]));
+		}
+	}
+
+	// FUNCTION: Determine if it is pointless to continue down a node.
+	// INPUT: N/A
+	// RETURN: true if the current row has no values greater than zero,
+	//         false otherwise
+	private static boolean meaninglessRow() {
+		for (int j = 1; j < m; j++) {
+			if (matrixN[depth][j] > 0) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	// FUNCTION: Update the maximum score if applicable.
+	// INPUT: N/A
+	// RETURN: true if the maximum score was updated,
+	//         false otherwise
+	private static boolean updateMaxScore() {
+		boolean maxScoreUpdated = false;
+
+		for (int j = 1; j < m; j++) {
+			if (matrixN[depth][j] > maxScore) {
+				maxScore = matrixN[depth][j];
+				maxScoreUpdated = true;
+			}
+		}
+
+		return maxScoreUpdated;
+	}
+
+	// FUNCTION: Determine the maximum score in the current row of
+	//           the specified matrix.
+	// INPUT: int[][] (matrix)
+	// RETURN: int (maximum score)
+	private static int maxScore(int[][] matrix) {
 		int max = Integer.MIN_VALUE;
 
 		for (int j = 0; j < m; j++) {
-			for (int i = 0; i < d; i++) {
-				if (matrix[i][j] > max) {
-					max = matrix[i][j];
-				}
+			if (matrix[depth][j] > max) {
+				max = matrix[depth][j];
 			}
 		}
 
 		return max;
 	}
 
-	private static int maxI(int[][] matrix, int d, int m) {
-		int max = Integer.MIN_VALUE;
-		int maxI = 0;
-
-		for (int j = 0; j < m; j++) {
-			for (int i = 0; i < d; i++) {
-				if (matrix[i][j] > max) {
-					max = matrix[i][j];
-					maxI = i;
-				}
-			}
-		}
-
-		return maxI;
-	}
-
-	private static int maxJ(int[][] matrix, int d, int m) {
+	// FUNCTION: Determine the index in the pattern (sequence 2)
+	//           which holds the maximum score in the current row
+	//           of the specified matrix.
+	// INPUT: int[][] (matrix)
+	// RETURN: int (pattern index)
+	private static int maxJ(int[][] matrix) {
 		int max = Integer.MIN_VALUE;
 		int maxJ = 0;
 
-		for (int j = 0; j < m; j++) {
-			for (int i = 0; i < d; i++) {
-				if (matrix[i][j] > max) {
-					max = matrix[i][j];
-					maxJ = j;
-				}
+		for (int j = 1; j < m; j++) {
+			if (matrix[depth][j] > max) {
+				max = matrix[depth][j];
+				maxJ = j;
 			}
 		}
 
 		return maxJ;
 	}
 
-	private static void reconstructAlignment(char[] sequence1, char[] sequence2,
-			int maxScoreMatrix, int maxI, int maxJ) {
+	// FUNCTION: Carry out traceback to construct the alignment.
+	// INPUT: char[] (the char array of X)
+	// RETURN: N/A
+	private static void traceback(char[] x) {
 		sequence1Alignment = "";
 		sequence2Alignment = "";
-		int i = maxI;
+		int maxScoreMatrix = 0;
+		int maxJ = 0;
+
+		if (maxScore(matrixN_1) >= maxScore(matrixN_2)
+				&& maxScore(matrixN_1) >= maxScore(matrixN_3)
+				&& maxScore(matrixN_1) > 0) {
+			maxScoreMatrix = 1;
+			maxJ = maxJ(matrixN_1);
+		} else if (maxScore(matrixN_2) >= maxScore(matrixN_3)
+				&& maxScore(matrixN_2) >= 0) {
+			maxScoreMatrix = 2;
+			maxJ = maxJ(matrixN_2);
+		} else if (maxScore(matrixN_3) >= 0) {
+			maxScoreMatrix = 3;
+			maxJ = maxJ(matrixN_3);
+		}
+
+		int i = depth;
 		int j = maxJ;
-		int sequence1Index = maxI - 1;
-		int sequence2Index = maxJ - 1;
+		int xIndex = depth - 1;
+		int patternIndex = maxJ - 1;
 
 		while (true) {
 			if (maxScoreMatrix == 1 && i > 0 && j > 0) {
-				sequence1Alignment += sequence1[sequence1Index];
-				sequence2Alignment += sequence2[sequence2Index];
+				sequence1Alignment += x[xIndex];
+				sequence2Alignment += pattern[patternIndex];
 				i--;
 				j--;
-				sequence1Index--;
-				sequence2Index--;
+				xIndex--;
+				patternIndex--;
 			} else if (maxScoreMatrix == 2 && i > 0 && j > 0) {
-				sequence1Alignment += sequence1[sequence1Index];
+				sequence1Alignment += x[xIndex];
 				sequence2Alignment += "-";
 				i--;
-				sequence1Index--;
+				xIndex--;
 			} else if (maxScoreMatrix == 3 && i > 0 && j > 0) {
 				sequence1Alignment += "-";
-				sequence2Alignment += sequence2[sequence2Index];
+				sequence2Alignment += pattern[patternIndex];
 				j--;
-				sequence2Index--;
+				patternIndex--;
 			} else {
-				return;
+				break;
 			}
 
-			if (matrixM_1[i][j] >= matrixM_2[i][j] && matrixM_1[i][j] >= matrixM_3[i][j]
-					&& matrixM_1[i][j] >= 0) {
+			if (matrixN_1[i][j] >= matrixN_2[i][j] && matrixN_1[i][j] >= matrixN_3[i][j]
+					&& matrixN_1[i][j] >= 0) {
 				maxScoreMatrix = 1;
-			} else if (matrixM_2[i][j] >= matrixM_3[i][j] && matrixM_2[i][j] >= 0) {
+			} else if (matrixN_2[i][j] >= matrixN_3[i][j] && matrixN_2[i][j] >= 0) {
 				maxScoreMatrix = 2;
-			} else if (matrixM_3[i][j] >= 0) {
+			} else if (matrixN_3[i][j] >= 0) {
 				maxScoreMatrix = 3;
 			} else {
 				maxScoreMatrix = 0;
 			}
 		}
+
+		sequence1Alignment = BWT.reverseString(sequence1Alignment);
+		sequence2Alignment = BWT.reverseString(sequence2Alignment);
 	}
 
-	public static void runLPA(String sequence1, String sequence2) {
-		char[] sequence1arr = sequence1.toCharArray();
-		char[] sequence2arr = sequence2.toCharArray();
-		int d = sequence1.length() + 1;
-		int m = sequence2.length() + 1;
-		matrixM = new int[d][m];
-		matrixM_1 = new int[d][m];
-		matrixM_2 = new int[d][m];
-		matrixM_3 = new int[d][m];
-
-		// Initialization
-		for (int j = 0; j < m; j++) {
-			matrixM[0][j] = 0;
+	// FUNCTION: Change the 'z' in zX^-1 to the next letter in the
+	//           lexicographical sequence.
+	// INPUT: String (old zX^-1)
+	// RETURN: String (new zX^-1)
+	private static String tryNextLetter(String x) {
+		if (x.startsWith("A")) {
+			x = "C" + x.substring(1, x.length());
+		} else if (x.startsWith("C")) {
+			x = "G" + x.substring(1, x.length());
+		} else {
+			x = "T" + x.substring(1, x.length());
 		}
 
-		for (int i = 1; i < d; i++) {
-			matrixM_1[i][0] = -(G + i * S);
-		}
+		return x;
+	}
 
-		for (int j = 0; j < m; j++) {
-			matrixM_2[0][j] = MIN_VALUE;
+	// FUNCTION: Check whether we have used the last letter in the
+	//           lexicographical sequence as 'z' in zX^-1.
+	// INPUT: String (zX^-1)
+	// RETURN: true if z = "T", false otherwise
+	private static boolean exhaustedAlphabet(String x) {
+		if (x.startsWith("T")) {
+			return true;
+		} else {
+			return false;
 		}
+	}
 
-		for (int i = 1; i < d; i++) {
-			matrixM_3[i][0] = MIN_VALUE;
-		}
+	// FUNCTION: Simulate a pre-order traversal of the suffix trie of
+	//           the text.
+	// INPUT: N/A
+	// RETURN: N/A
+	private static void traverseSuffixTrie() {
+		// Set start node
+		String x = "A";
+		depth = 1;
+		boolean depthDecreased = false;
 
-		// Computation
-		for (int j = 1; j < m; j++) {
-			for (int i = 1; i < d; i++) {
-				matrixM_1[i][j] = matrixM[i - 1][j - 1]
-						+ getDistance(sequence1arr[i - 1], sequence2arr[j - 1]);
-				matrixM_2[i][j] = Math.max(matrixM_2[i - 1][j] - S,
-						matrixM[i - 1][j] - (G + S));
-				matrixM_3[i][j] = Math.max(matrixM_3[i][j - 1] - S,
-						matrixM[i][j - 1] - (G + S));
-				matrixM[i][j] = Math.max(Math.max(matrixM_1[i][j], matrixM_2[i][j]),
-						Math.max(matrixM_3[i][j], 0));
+		while (depth > 0) {
+			boolean tryNextLetter = true;
+
+			if (!depthDecreased) {
+				int[] saRange = saRanges.peek();
+				int i = saRange[0];
+				int j = saRange[1];
+				saRange = BackwardSearch.getSARange(x.substring(0, 1),
+						countTable, bwt, i, j);
+
+				if (BackwardSearch.isValid(saRange)) {
+					fillRow(x.charAt(0));
+
+					if (!meaninglessRow()) {
+						boolean maxScoreUpdated = updateMaxScore();
+
+						if (maxScoreUpdated) {
+							// Do traceback only if the maximum score changes
+							traceback(BWT.reverseString(x).toCharArray());
+						}
+
+						// Move down the tree
+						x = "A" + x;
+						depth++;
+						saRanges.push(saRange);
+						tryNextLetter = false;
+					}
+				}
+			}
+
+			if (tryNextLetter) {
+				if (!exhaustedAlphabet(x)) {
+					// Try moving to a different child
+					x = tryNextLetter(x);
+					depthDecreased = false;
+				} else {
+					// Move back up the tree
+					x = x.substring(1, x.length());
+					depth--;
+					depthDecreased = true;
+					saRanges.pop();
+				}
 			}
 		}
-
-		// Traceback
-		// Determine which matrix to start the traceback from
-		int maxScoreMatrix = 0;
-		int maxI = 0;
-		int maxJ = 0;
-
-		if (maxScore(matrixM_1, d, m) >= maxScore(matrixM_2, d, m)
-				&& maxScore(matrixM_1, d, m) >= maxScore(matrixM_3, d, m)
-				&& maxScore(matrixM_1, d, m) >= 0) {
-			maxScoreMatrix = 1;
-			maxI = maxI(matrixM_1, d, m);
-			maxJ = maxJ(matrixM_1, d, m);
-		} else if (maxScore(matrixM_2, d, m) >= maxScore(matrixM_3, d, m)
-				&& maxScore(matrixM_2, d, m) >= 0) {
-			maxScoreMatrix = 2;
-			maxI = maxI(matrixM_2, d, m);
-			maxJ = maxJ(matrixM_2, d, m);
-		} else if (maxScore(matrixM_3, d, m) >= 0) {
-			maxScoreMatrix = 3;
-			maxI = maxI(matrixM_3, d, m);
-			maxJ = maxJ(matrixM_3, d, m);
-		}
-
-		// Start traceback
-		reconstructAlignment(sequence1arr, sequence2arr,
-				maxScoreMatrix, maxI, maxJ);
-
-		// Termination
-		alignmentScore = maxScore(matrixM, d, m);
 	}
 
-	public static String getSequence1Alignment() {
-		return sequence1Alignment;
+	// FUNCTION: Use BWT-SW to find the best local alignment between
+	//           the given text and pattern.
+	// INPUT: N/A
+	// RETURN: N/A
+	private static void findBestLocalAlignment() {
+		saRanges = new Stack<int[]>();
+		int[] saRange = {0, bwt.length() - 1};
+		saRanges.push(saRange);
+		n = bwt.length() + 1;
+		m = pattern.length + 1;
+
+		initializeMatrices();
+		traverseSuffixTrie();
 	}
 
-	public static String getSequence2Alignment() {
-		return sequence2Alignment;
-	}
+	public static void main(String[] args) {
+		text = Parser.parseSequenceFile(TEXT_PATH);
+		pattern = Parser.parseSequenceFile(PATTERN_PATH).toCharArray();
+		bwt = BWT.getReverseBWT(text);
+		countTable = new ArrayList<CharOccurrence>();
+		countTable = BWT.getCharOccurrenceTable(text);
 
-	public static int getAlignmentScore() {
-		return alignmentScore;
+		findBestLocalAlignment();
+
+		// Print alignment and alignment score to console output
+		System.out.println("Sequence 1=" + sequence1Alignment); // Text
+		System.out.println("Sequence 2=" + sequence2Alignment); // Pattern
+		System.out.println("Score=" + maxScore);
+		System.out.println();
+		System.out.println("End of program");
 	}
 }
