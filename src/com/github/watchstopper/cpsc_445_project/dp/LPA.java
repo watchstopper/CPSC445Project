@@ -270,6 +270,7 @@ public class LPA {
 				if (BackwardSearch.isValid(saRange)) {
 					fillRow(x.charAt(0));
 
+					// Check if we need to prune
 					if (!meaninglessRow()) {
 						boolean maxScoreUpdated = updateMaxScore();
 
