@@ -2,14 +2,15 @@ package com.github.watchstopper.cpsc_445_project.parser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Parser {
 	// FUNCTION: Obtains the sequence stored in a text file.
 	// INPUT: String (file path)
 	// RETURN: String (sequence)
-	public static String parseSequenceFile(String filePath) {
-		String sequence = "";
+	public static ArrayList<String> parseSequenceFile(String filePath) {
+		ArrayList<String> sequence = new ArrayList<String>();
 		File file = new File(filePath);
 		Scanner scanner;
 
@@ -17,7 +18,7 @@ public class Parser {
 			scanner = new Scanner(file);
 
 			while (scanner.hasNextLine()) {
-				sequence += scanner.nextLine();
+				sequence.add(scanner.nextLine());
 			}
 
 			scanner.close();

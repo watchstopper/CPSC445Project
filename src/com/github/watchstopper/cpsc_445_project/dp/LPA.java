@@ -17,8 +17,8 @@ public class LPA {
 	private static char[] pattern;
 	private static String bwt;
 	private static ArrayList<CharOccurrence> countTable;
-	private static ArrayList<String> matches;
-	
+	public static ArrayList<ArrayList<String>> ALLMATCHES;
+	public static ArrayList<String> allpatterns;
 
 	private static Stack<int[]> saRanges;
 	private static int n;
@@ -42,6 +42,7 @@ public class LPA {
 	private static final int G = 5;
 	private static final int S = 2;
 	private static final int MIN_VALUE = -50000;
+
 
 	// FUNCTION: Initialize the DP tables.
 	// INPUT: N/A
@@ -331,45 +332,43 @@ public class LPA {
 		traverseSuffixTrie();
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		
-		pattern = Parser.parseSequenceFile(PATTERN_PATH).toCharArray();
+		allpatterns = new ArrayList<String>();
+		allpatterns = Parser.parseSequenceFile(PATTERN_PATH);
 		
-		try {
+		for (int i = 0; i < allpatterns.size(); i++) {
+			pattern = allpatterns.get(i).toCharArray();
 			BufferedReader br = new BufferedReader(new FileReader(TEXT_PATH));
-			text = null;
-			matches = new ArrayList<String>();
-			seqCounter = 0;
-			while((text=br.readLine()) != null){
-				String temp = text.substring(0,1);
-				if(!temp.equals(">")){
-					bwt = BWT.getReverseBWT(text);
-					countTable = new ArrayList<CharOccurrence>();
-					countTable = BWT.getCharOccurrenceTable(text);
-					findBestLocalAlignment();
-					if(maxScore > pattern.length-3){
-						matches.add(text);
-					}
-					seqCounter++;
-					System.out.println("done" + seqCounter + "sequences");
-					if(20%seqCounter==0){
-						System.out.println(maxScore);
+			try {
+				text = null;
+				ALLMATCHES = new ArrayList<ArrayList<String>>();
+				seqCounter = 0;
+				while ((text = br.readLine()) != null) {
+					String temp = text.substring(0, 1);
+					if (!temp.equals(">")) {
+						bwt = BWT.getReverseBWT(text);
+						countTable = new ArrayList<CharOccurrence>();
+						countTable = BWT.getCharOccurrenceTable(text);
+						findBestLocalAlignment();
+						if (maxScore > pattern.length - 3) {
+							ALLMATCHES.get(i).add(text);
+						}
+						seqCounter++;
+						System.out.println("done" + seqCounter + "sequences");
+						if (20 % seqCounter == 0) {
+							System.out.println(maxScore);
+						}
 					}
 				}
+			} finally {
+				br.close();
 			}
-		} catch (FileNotFoundException e) {
-			System.out.println("error, file not found");
-			System.exit(-1);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		
-		if(!matches.isEmpty()){
-			for(int i=0;i<matches.size()-1;i++){
-				System.out.println(matches.get(i));
+		if(!ALLMATCHES.isEmpty()){
+			for(int i=0;i<ALLMATCHES.size();i++){
+				System.out.println("For the" + i + "th pattern, there are" + ALLMATCHES.get(i).size() + "matches");
 			}
-			System.out.println(seqCounter + "sequences found");
 		}else{
 			System.out.println("no matches were found");
 		}
