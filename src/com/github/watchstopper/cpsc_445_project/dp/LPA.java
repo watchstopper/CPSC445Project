@@ -1,5 +1,9 @@
 package com.github.watchstopper.cpsc_445_project.dp;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Stack;
 
@@ -13,11 +17,14 @@ public class LPA {
 	private static char[] pattern;
 	private static String bwt;
 	private static ArrayList<CharOccurrence> countTable;
+	private static ArrayList<String> matches;
+	
 
 	private static Stack<int[]> saRanges;
 	private static int n;
 	private static int m;
 	private static int depth;
+	private static int seqCounter;
 
 	private static int[][] matrixN;
 	private static int[][] matrixN_1;
@@ -319,18 +326,47 @@ public class LPA {
 	}
 
 	public static void main(String[] args) {
-		text = Parser.parseSequenceFile(TEXT_PATH);
+		
 		pattern = Parser.parseSequenceFile(PATTERN_PATH).toCharArray();
-		bwt = BWT.getReverseBWT(text);
-		countTable = new ArrayList<CharOccurrence>();
-		countTable = BWT.getCharOccurrenceTable(text);
-
-		findBestLocalAlignment();
-
-		// Print alignment and alignment score to console output
-		System.out.println("Sequence 1=" + sequence1Alignment); // Text
-		System.out.println("Sequence 2=" + sequence2Alignment); // Pattern
-		System.out.println("Score=" + maxScore);
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(TEXT_PATH));
+			text = null;
+			matches = new ArrayList<String>();
+			seqCounter = 0;
+			while((text=br.readLine()) != null){
+				String temp = text.substring(0,1);
+				if(!temp.equals(">")){
+					bwt = BWT.getReverseBWT(text);
+					countTable = new ArrayList<CharOccurrence>();
+					countTable = BWT.getCharOccurrenceTable(text);
+					findBestLocalAlignment();
+					if(maxScore > pattern.length-3){
+						matches.add(text);
+					}
+					seqCounter++;
+					System.out.println("done" + seqCounter + "sequences");
+					if(20%seqCounter==0){
+						System.out.println(maxScore);
+					}
+				}
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println("error, file not found");
+			System.exit(-1);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		if(!matches.isEmpty()){
+			for(int i=0;i<matches.size()-1;i++){
+				System.out.println(matches.get(i));
+			}
+			System.out.println(seqCounter + "sequences found");
+		}else{
+			System.out.println("no matches were found");
+		}
 		System.out.println();
 		System.out.println("End of program");
 	}
