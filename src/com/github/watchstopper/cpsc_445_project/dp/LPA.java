@@ -81,13 +81,16 @@ public class LPA {
 		for (int j = 1; j < m; j++) {
 			// Simplified recurrences
 			matrixN_1[depth][j] = Math.max(MIN_VALUE,
-					matrixN[depth - 1][j - 1] + getDistance(c, pattern[j - 1]));
+					matrixN[depth - 1][j - 1]
+							+ getDistance(c, pattern[j - 1]));
 
 			matrixN_2[depth][j] = Math.max(MIN_VALUE,
-					Math.max(matrixN[depth - 1][j] - (G + S), matrixN_2[depth - 1][j] - S));
+					Math.max(matrixN[depth - 1][j] - (G + S),
+							matrixN_2[depth - 1][j] - S));
 
 			matrixN_3[depth][j] = Math.max(MIN_VALUE,
-					Math.max(matrixN[depth][j - 1] - (G + S), matrixN_3[depth][j - 1] - S));
+					Math.max(matrixN[depth][j - 1] - (G + S),
+							matrixN_3[depth][j - 1] - S));
 
 			matrixN[depth][j] = Math.max(matrixN_1[depth][j],
 					Math.max(matrixN_2[depth][j], matrixN_3[depth][j]));
@@ -210,10 +213,12 @@ public class LPA {
 				break;
 			}
 
-			if (matrixN_1[i][j] >= matrixN_2[i][j] && matrixN_1[i][j] >= matrixN_3[i][j]
-					&& matrixN_1[i][j] >= 0) {
+			if (matrixN_1[i][j] >= matrixN_2[i][j]
+					&& matrixN_1[i][j] >= matrixN_3[i][j]
+							&& matrixN_1[i][j] >= 0) {
 				maxScoreMatrix = 1;
-			} else if (matrixN_2[i][j] >= matrixN_3[i][j] && matrixN_2[i][j] >= 0) {
+			} else if (matrixN_2[i][j] >= matrixN_3[i][j]
+					&& matrixN_2[i][j] >= 0) {
 				maxScoreMatrix = 2;
 			} else if (matrixN_3[i][j] >= 0) {
 				maxScoreMatrix = 3;
@@ -277,6 +282,7 @@ public class LPA {
 				if (BackwardSearch.isValid(saRange)) {
 					fillRow(x.charAt(0));
 
+					// Check if we need to prune
 					if (!meaninglessRow()) {
 						boolean maxScoreUpdated = updateMaxScore();
 
