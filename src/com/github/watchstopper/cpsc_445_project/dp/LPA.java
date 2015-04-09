@@ -17,8 +17,9 @@ public class LPA {
 	private static char[] pattern;
 	private static String bwt;
 	private static ArrayList<CharOccurrence> countTable;
-	public static ArrayList<ArrayList<String>> ALLMATCHES;
 	public static ArrayList<String> allpatterns;
+	public static ArrayList<String> matches;
+	public static ArrayList<ArrayList<String>> ALLMATCHES;
 
 	private static Stack<int[]> saRanges;
 	private static int n;
@@ -343,6 +344,7 @@ public class LPA {
 			try {
 				text = null;
 				ALLMATCHES = new ArrayList<ArrayList<String>>();
+				matches = new ArrayList<String>();
 				seqCounter = 0;
 				while ((text = br.readLine()) != null) {
 					String temp = text.substring(0, 1);
@@ -351,8 +353,8 @@ public class LPA {
 						countTable = new ArrayList<CharOccurrence>();
 						countTable = BWT.getCharOccurrenceTable(text);
 						findBestLocalAlignment();
-						if (maxScore > pattern.length - 3) {
-							ALLMATCHES.get(i).add(text);
+						if (maxScore > 80) {
+							matches.add(text);
 						}
 						seqCounter++;
 						System.out.println("done" + seqCounter + "sequences");
@@ -363,6 +365,9 @@ public class LPA {
 				}
 			} finally {
 				br.close();
+			}
+			if(matches!=null){
+				ALLMATCHES.add(matches);
 			}
 		}
 		if(!ALLMATCHES.isEmpty()){
