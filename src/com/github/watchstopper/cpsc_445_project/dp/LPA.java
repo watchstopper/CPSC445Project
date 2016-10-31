@@ -372,7 +372,7 @@ public class LPA {
 		}
 		if(!ALLMATCHES.isEmpty()){
 			for(int i=0;i<ALLMATCHES.size();i++){
-				System.out.println("For the" + i + "th pattern, there are" + ALLMATCHES.get(i).size() + "matches");
+				System.out.println("For pattern number " + (i+1) + ", there are " + ALLMATCHES.get(i).size() + " matches");
 			}
 		}else{
 			System.out.println("no matches were found");
